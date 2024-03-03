@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"mime"
 
 	"github.com/joho/godotenv"
 	"github.com/richard-egeli/go-starter-template/pkg/router"
@@ -17,8 +16,6 @@ func main() {
 	layoutData := layout.BaseLayoutData{
 		Title: "go-starter-template",
 	}
-
-	mime.AddExtensionType(".css", "text/css")
 
 	base := router.New()
 	base.SetupBrowserRefreshEvent()
