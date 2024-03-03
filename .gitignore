@@ -1,0 +1,15 @@
+tmp/
+build/
+.git/
+
+
+views/**/*_templ.go
+
+tailwindcss
+.env
+.DS_Store
+
+# CSS Tailwind Styling
+static/output.css
+
+package-lock.json

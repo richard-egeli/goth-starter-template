@@ -1,0 +1,31 @@
+pre,
+code,
+kbd,
+samp {
+  font-family: Menlo, Consolas, "Courier New", monospace;
+}
+
+
+.sign-in-button-text {
+  display: block;
+}
+
+.sign-in-button-spinner {
+  display: none;
+}
+
+.htmx-request .sign-in-button-text {
+  display: none;
+}
+
+.htmx-request.sign-in-button-text {
+  display: none;
+}
+
+.htmx-request.sign-in-button-spinner {
+  display: block;
+}
+
+.htmx-request .sign-in-button-spinner {
+  display: block;
+}
