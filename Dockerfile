@@ -8,9 +8,9 @@ WORKDIR  /build
 
 COPY . .
 
-RUN npm install -g esbuild
+RUN go env -w GOCACHE=/go-cache
 
-RUN npm install -g tailwindcss
+RUN --mount=type=cache,target=/go-cache npm install -g esbuild tailwindcss
 
 RUN esbuild --version
 
@@ -18,7 +18,7 @@ RUN esbuild web/src/index.ts --bundle --minify --format=esm --target=esnext --ou
 
 RUN go mod tidy
 
-RUN go install github.com/a-h/templ/cmd/templ@latest
+RUN --mount=type=cache,target=/go-cache go install github.com/a-h/templ/cmd/templ@latest
 
 RUN templ version
 
