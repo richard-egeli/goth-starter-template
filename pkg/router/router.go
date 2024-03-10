@@ -9,7 +9,7 @@ type Router struct {
 	root        string
 	parent      *Router
 	mux         *http.ServeMux
-	middlewares []Middleware
+	middlewares []func(http.Handler) http.Handler
 }
 
 func New() *Router {
@@ -20,7 +20,14 @@ func New() *Router {
 	}
 }
 
-func (router *Router) getMiddlewares() []Middleware {
+func reverse[T any](s []T) []T {
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
+	return s
+}
+
+func (router *Router) getMiddlewares() []func(http.Handler) http.Handler {
 	if router.parent != nil {
 		return append(router.parent.getMiddlewares(), router.middlewares...)
 	} else {
@@ -28,7 +35,7 @@ func (router *Router) getMiddlewares() []Middleware {
 	}
 }
 
-func (router *Router) set(path string, method Method, middlewares []Middleware, handler http.Handler) {
+func (router *Router) set(path string, method Method, handlers []func(http.Handler) http.Handler) {
 	path = router.root + path
 	length := len(path)
 	if !strings.HasPrefix(path, "/") {
@@ -39,8 +46,9 @@ func (router *Router) set(path string, method Method, middlewares []Middleware, 
 		path = string(method) + " " + path
 	}
 
-	for _, mw := range append(router.getMiddlewares(), middlewares...) {
-		handler = mw(handler)
+	var handler http.Handler
+	for _, h := range append(reverse(handlers), reverse(router.getMiddlewares())...) {
+		handler = h(handler)
 	}
 
 	if strings.HasSuffix(path, "/") && length > 1 {
@@ -59,7 +67,7 @@ func (router *Router) route() string {
 	return router.root
 }
 
-func (router *Router) Use(middleware Middleware) {
+func (router *Router) Use(middleware func(http.Handler) http.Handler) {
 	router.middlewares = append(router.middlewares, middleware)
 }
 
@@ -72,43 +80,43 @@ func (router *Router) Sub(subroute string) *Router {
 	}
 }
 
-func (router *Router) Get(path string, middlewares []Middleware, handler http.Handler) {
-	router.set(path, GET, middlewares, handler)
+func (router *Router) Get(path string, handlers ...func(http.Handler) http.Handler) {
+	router.set(path, GET, handlers)
 }
 
-func (router *Router) Post(path string, middlewares []Middleware, handler http.Handler) {
-	router.set(path, POST, middlewares, handler)
+func (router *Router) Post(path string, handlers ...func(http.Handler) http.Handler) {
+	router.set(path, POST, handlers)
 }
 
-func (router *Router) Delete(path string, middlewares []Middleware, handler http.Handler) {
-	router.set(path, DELETE, middlewares, handler)
+func (router *Router) Delete(path string, handlers ...func(http.Handler) http.Handler) {
+	router.set(path, DELETE, handlers)
 }
 
-func (router *Router) Put(path string, middlewares []Middleware, handler http.Handler) {
-	router.set(path, PUT, middlewares, handler)
+func (router *Router) Put(path string, handlers ...func(http.Handler) http.Handler) {
+	router.set(path, PUT, handlers)
 }
 
-func (router *Router) Patch(path string, middlewares []Middleware, handler http.Handler) {
-	router.set(path, PATCH, middlewares, handler)
+func (router *Router) Patch(path string, handlers ...func(http.Handler) http.Handler) {
+	router.set(path, PATCH, handlers)
 }
 
-func (router *Router) Head(path string, middlewares []Middleware, handler http.Handler) {
-	router.set(path, HEAD, middlewares, handler)
+func (router *Router) Head(path string, handlers ...func(http.Handler) http.Handler) {
+	router.set(path, HEAD, handlers)
 }
 
-func (router *Router) Options(path string, middlewares []Middleware, handler http.Handler) {
-	router.set(path, OPTIONS, middlewares, handler)
+func (router *Router) Options(path string, handlers ...func(http.Handler) http.Handler) {
+	router.set(path, OPTIONS, handlers)
 }
 
-func (router *Router) Any(path string, middlewares []Middleware, handler http.Handler) {
-	router.set(path, "", middlewares, handler)
+func (router *Router) Any(path string, handlers ...func(http.Handler) http.Handler) {
+	router.set(path, "", handlers)
 }
 
-func (router *Router) Dir(path string, dir string, middlewares []Middleware) {
+func (router *Router) Dir(path string, dir string, handlers ...func(http.Handler) http.Handler) {
 	fs := http.FileServer(http.Dir(dir))
 
-	for _, mw := range middlewares {
-		fs = mw(fs)
+	for _, handler := range handlers {
+		fs = handler(fs)
 	}
 
 	path = "/" + strings.Trim(path, "/") + "/"

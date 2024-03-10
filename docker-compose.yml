@@ -3,7 +3,7 @@ services:
   web:
     image: richardegeli/simple-corax
     volumes:
-      - simplex-corax-volume:/app/data
+      - simplex-corax-volume:/app/static/content
     deploy:
       resources:
         limits:

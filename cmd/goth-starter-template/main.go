@@ -7,6 +7,7 @@ import (
 
 	"goth-starter-template/pkg/router"
 	"goth-starter-template/views/layout"
+	"goth-starter-template/views/pages"
 
 	"github.com/joho/godotenv"
 )
@@ -48,15 +49,16 @@ func main() {
 
 	if runtime != "production" {
 		base.SetupBrowserRefreshEvent()
-		base.Dir("/scripts/", "./web/src", []router.Middleware{router.TypescriptTranspilationMiddleware})
+		base.Dir("/scripts/", "./web/src", router.TypescriptTranspilationMiddleware)
 	} else {
 		// Expects in production that typescript should be transpiled into a javascript file
-		base.Dir("/scripts/", "./scripts", []router.Middleware{router.GzipMiddleware})
+		base.Dir("/scripts/", "./scripts", router.GzipMiddleware)
 		base.Use(router.HTTPSMiddleware)
 	}
 
-	base.Dir("/static/", "./static", []router.Middleware{router.GzipMiddleware})
-	base.Get("/", []router.Middleware{defaultMW}, router.Page(layout.BaseLayout, &layoutData))
+	base.Dir("/static/", "./static", router.GzipMiddleware)
+	base.Get("/", defaultMW, router.Page(layout.BaseLayout, &layoutData))
+	base.Get("/404", router.Page(pages.NotFound, nil))
 
 	fmt.Println("Listening on port:", port)
 	base.Listen(port)
