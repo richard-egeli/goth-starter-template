@@ -1,3 +1,1 @@
-import "./reload";
-
-console.log("Welcome to the Goth Starter Template!");
+console.log("Welcome to the GOTH Starter Template!");

@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"io"
 	"net/http"
+	"strings"
 )
 
 type gzipResponseWriter struct {
@@ -17,10 +18,16 @@ func (w gzipResponseWriter) Write(b []byte) (int, error) {
 
 func GzipMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Encoding", "gzip")
-		gz := gzip.NewWriter(w)
-		defer gz.Close()
-		writer := gzipResponseWriter{Writer: gz, ResponseWriter: w}
-		next.ServeHTTP(writer, r)
+		encodings := r.Header.Get("Accept-Encoding")
+
+		if strings.Contains(encodings, "gzip") {
+			w.Header().Set("Content-Encoding", "gzip")
+			gz := gzip.NewWriter(w)
+			defer gz.Close()
+			writer := gzipResponseWriter{Writer: gz, ResponseWriter: w}
+			next.ServeHTTP(writer, r)
+		} else {
+			next.ServeHTTP(w, r)
+		}
 	})
 }

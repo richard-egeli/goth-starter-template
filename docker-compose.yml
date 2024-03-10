@@ -1,0 +1,26 @@
+version: "3"
+services:
+  web:
+    image: richardegeli/simple-corax
+    volumes:
+      - simplex-corax-volume:/app/data
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 64M
+        reservations:
+          memory: 6M
+    platform: "linux/amd64"
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+
+volumes:
+  simplex-corax-volume:
+    driver: local
+    driver_opts:
+      o: "size=10m"
+      device: tmpfs
+      type: tmpfs

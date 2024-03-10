@@ -15,7 +15,6 @@ func TypescriptTranspilationMiddleware(next http.Handler) http.Handler {
 		extension := filepath.Ext(r.URL.Path)
 
 		if extension == ".js" {
-			log.Println("Loading")
 			filename := strings.ReplaceAll(r.URL.Path, ".js", ".ts")
 			cmd := exec.Command("esbuild", "web/src/"+filename, "--bundle", "--minify", "--format=esm", "--target=esnext")
 			output, err := cmd.Output()

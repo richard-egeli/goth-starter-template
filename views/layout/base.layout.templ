@@ -1,40 +1,43 @@
 package layout
 
 import "net/http"
+import "os"
 
 type BaseLayoutData struct {
 	Title string
-	CSRF  string
 }
 
-templ BaseLayout(w http.ResponseWriter, r *http.Request, data *BaseLayoutData) {
+func includeReloadScript() bool {
+	return os.Getenv("RUNTIME") != "production"
+}
+
+templ BaseLayout(w http.ResponseWriter, r *http.Request, _ *BaseLayoutData) {
 	<!DOCTYPE html>
 	<html lang="en" data-theme="dark">
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			if data != nil && len(data.CSRF) > 0 {
-				<meta name="csrf" content={ data.CSRF }/>
-			}
-			if data != nil {
-				if len(data.CSRF) > 0 {
-					<meta name="csrf" content={ data.CSRF }/>
-				}
-				if len(data.Title) > 0 {
-					<title>{  data.Title }</title>
-				} else {
-					<title>Undefined</title>
-				}
-			}
+			<meta name="csrf-token" content={ w.Header().Get("X-CSRF-Token") }/>
 			<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
 			<script src="https://unpkg.com/htmx.org/dist/ext/sse.js"></script>
-			<script src="https://cdn.tailwindcss.com"></script>
-			<link href="/static/style.css" rel="stylesheet"/>
+			<link href="/static/output.css" rel="stylesheet"/>
 			<link rel="icon" href="/static/favicon.ico" type="image/x-icon"/>
 			<script src="/scripts/index.js"></script>
+			if includeReloadScript() {
+				<script>
+          try {
+            const evtSource = new EventSource("/server/sent/event/browser/reload");
+            evtSource.onmessage = function (_) {
+              window.location.reload();
+            };
+          } catch (_) {
+            window.location.reload();
+          }
+        </script>
+			}
 		</head>
 		<body>
-			<h1>
+			<h1 class="text-3xl font-bold">
 				Welcome to the GOTH Starter Template By Richard
 			</h1>
 			{ children... }
